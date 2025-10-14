@@ -40,3 +40,31 @@ test('reference loader confirms AND and OR operators exist', () => {
   assert.strictEqual(loader.hasCommand('c64', 'basic-v2', 'AND'), true);
   assert.strictEqual(loader.hasCommand('c64', 'basic-v2', 'OR'), true);
 });
+
+test('reference loader throws meaningful error for non-existent platform', () => {
+  const loader = new ReferenceLoader();
+
+  assert.throws(
+    () => loader.loadCommands('invalid-platform', 'basic-v2'),
+    (error: Error) => {
+      assert.ok(error.message.includes('Reference file not found'));
+      assert.ok(error.message.includes('Platform: invalid-platform'));
+      assert.ok(error.message.includes('Language: basic-v2'));
+      return true;
+    }
+  );
+});
+
+test('reference loader throws meaningful error for non-existent language', () => {
+  const loader = new ReferenceLoader();
+
+  assert.throws(
+    () => loader.loadCommands('c64', 'invalid-language'),
+    (error: Error) => {
+      assert.ok(error.message.includes('Reference file not found'));
+      assert.ok(error.message.includes('Platform: c64'));
+      assert.ok(error.message.includes('Language: invalid-language'));
+      return true;
+    }
+  );
+});
