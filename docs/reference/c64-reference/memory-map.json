@@ -92,28 +92,201 @@
       "Set bit to 1 to enable sprite"
     ]
   },
-  "sprite_x": {
+  "sprite_0_x": {
     "start": 53248,
-    "end": 53264,
-    "size": 16,
-    "description": "Sprite X coordinates (low byte) and MSB register",
+    "end": 53248,
+    "size": 1,
+    "description": "Sprite 0 X coordinate",
     "access": "read-write",
-    "register": "VIC-II $D000-$D010",
+    "register": "VIC-II $D000",
     "notes": [
-      "Even addresses: X coordinate low byte (0-255)",
-      "$D010: X coordinate MSB for positions > 255"
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 0 for positions > 255"
     ]
   },
-  "sprite_y": {
+  "sprite_0_y": {
     "start": 53249,
-    "end": 53264,
-    "size": 8,
-    "description": "Sprite Y coordinates",
+    "end": 53249,
+    "size": 1,
+    "description": "Sprite 0 Y coordinate",
     "access": "read-write",
-    "register": "VIC-II $D001,$D003,$D005...",
+    "register": "VIC-II $D001",
     "notes": [
-      "Odd addresses from $D001-$D00F",
-      "Range: 0-255 (50-249 visible)"
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_1_x": {
+    "start": 53250,
+    "end": 53250,
+    "size": 1,
+    "description": "Sprite 1 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D002",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 1 for positions > 255"
+    ]
+  },
+  "sprite_1_y": {
+    "start": 53251,
+    "end": 53251,
+    "size": 1,
+    "description": "Sprite 1 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D003",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_2_x": {
+    "start": 53252,
+    "end": 53252,
+    "size": 1,
+    "description": "Sprite 2 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D004",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 2 for positions > 255"
+    ]
+  },
+  "sprite_2_y": {
+    "start": 53253,
+    "end": 53253,
+    "size": 1,
+    "description": "Sprite 2 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D005",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_3_x": {
+    "start": 53254,
+    "end": 53254,
+    "size": 1,
+    "description": "Sprite 3 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D006",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 3 for positions > 255"
+    ]
+  },
+  "sprite_3_y": {
+    "start": 53255,
+    "end": 53255,
+    "size": 1,
+    "description": "Sprite 3 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D007",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_4_x": {
+    "start": 53256,
+    "end": 53256,
+    "size": 1,
+    "description": "Sprite 4 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D008",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 4 for positions > 255"
+    ]
+  },
+  "sprite_4_y": {
+    "start": 53257,
+    "end": 53257,
+    "size": 1,
+    "description": "Sprite 4 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D009",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_5_x": {
+    "start": 53258,
+    "end": 53258,
+    "size": 1,
+    "description": "Sprite 5 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00A",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 5 for positions > 255"
+    ]
+  },
+  "sprite_5_y": {
+    "start": 53259,
+    "end": 53259,
+    "size": 1,
+    "description": "Sprite 5 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00B",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_6_x": {
+    "start": 53260,
+    "end": 53260,
+    "size": 1,
+    "description": "Sprite 6 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00C",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 6 for positions > 255"
+    ]
+  },
+  "sprite_6_y": {
+    "start": 53261,
+    "end": 53261,
+    "size": 1,
+    "description": "Sprite 6 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00D",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_7_x": {
+    "start": 53262,
+    "end": 53262,
+    "size": 1,
+    "description": "Sprite 7 X coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00E",
+    "notes": [
+      "X position low byte (0-255)",
+      "Use sprite_x_msb bit 7 for positions > 255"
+    ]
+  },
+  "sprite_7_y": {
+    "start": 53263,
+    "end": 53263,
+    "size": 1,
+    "description": "Sprite 7 Y coordinate",
+    "access": "read-write",
+    "register": "VIC-II $D00F",
+    "notes": [
+      "Y position (0-255, typically 50-249 visible)"
+    ]
+  },
+  "sprite_x_msb": {
+    "start": 53264,
+    "end": 53264,
+    "size": 1,
+    "description": "Sprite X coordinate MSB (most significant bit)",
+    "access": "read-write",
+    "register": "VIC-II $D010",
+    "notes": [
+      "Bit 0 = sprite 0 X MSB, bit 1 = sprite 1 X MSB, etc.",
+      "Set bit to 1 for X positions 256-511",
+      "X position = (sprite_x_coords value) + (this bit × 256)"
     ]
   },
   "sprite_collision": {

@@ -39,3 +39,37 @@ test('memory map returns null for unused address', () => {
   // (depends on complete memory map coverage)
   assert.ok(region === null || region);
 });
+
+test('memory map distinguishes sprite X and Y registers (even/odd addresses)', () => {
+  const loader = new ReferenceLoader();
+
+  // Test even addresses (sprite X coords)
+  const sprite0X = loader.getMemoryRegion('c64', 53248); // $D000
+  const sprite1X = loader.getMemoryRegion('c64', 53250); // $D002
+  const sprite7X = loader.getMemoryRegion('c64', 53262); // $D00E
+
+  assert.ok(sprite0X);
+  assert.ok(sprite1X);
+  assert.ok(sprite7X);
+  assert.strictEqual(sprite0X.description, 'Sprite 0 X coordinate');
+  assert.strictEqual(sprite1X.description, 'Sprite 1 X coordinate');
+  assert.strictEqual(sprite7X.description, 'Sprite 7 X coordinate');
+
+  // Test odd addresses (sprite Y coords)
+  const sprite0Y = loader.getMemoryRegion('c64', 53249); // $D001
+  const sprite1Y = loader.getMemoryRegion('c64', 53251); // $D003
+  const sprite7Y = loader.getMemoryRegion('c64', 53263); // $D00F
+
+  assert.ok(sprite0Y);
+  assert.ok(sprite1Y);
+  assert.ok(sprite7Y);
+  assert.strictEqual(sprite0Y.description, 'Sprite 0 Y coordinate');
+  assert.strictEqual(sprite1Y.description, 'Sprite 1 Y coordinate');
+  assert.strictEqual(sprite7Y.description, 'Sprite 7 Y coordinate');
+
+  // Test sprite X MSB register
+  const spriteMSB = loader.getMemoryRegion('c64', 53264); // $D010
+
+  assert.ok(spriteMSB);
+  assert.strictEqual(spriteMSB.description, 'Sprite X coordinate MSB (most significant bit)');
+});
