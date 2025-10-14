@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://code198x.stevehill.xyz/schemas/platform-definition.json",
+  "title": "Platform Definition",
+  "description": "Defines a retro platform's languages, emulator, and constraints",
+  "type": "object",
+  "required": ["id", "name", "languages", "emulator"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique platform identifier (e.g., 'c64', 'spectrum')"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable platform name"
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "validator", "file_extension"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Language identifier"
+          },
+          "name": {
+            "type": "string"
+          },
+          "validator": {
+            "type": "string",
+            "description": "Validator module name"
+          },
+          "compiler": {
+            "type": "string",
+            "description": "Optional compiler/assembler command"
+          },
+          "file_extension": {
+            "type": "string",
+            "pattern": "^\\.[a-z]+$"
+          },
+          "reference_docs": {
+            "type": "string",
+            "description": "Path to reference documentation"
+          }
+        }
+      }
+    },
+    "emulator": {
+      "type": "object",
+      "required": ["name", "command"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "headless_flag": {
+          "type": "string"
+        },
+        "controller": {
+          "type": "string",
+          "description": "Automation controller module"
+        }
+      }
+    },
+    "lesson_time_limits": {
+      "type": "object",
+      "description": "Time limits per language",
+      "patternProperties": {
+        ".*": {
+          "type": "string",
+          "pattern": "^\\d+-\\d+min$"
+        }
+      }
+    }
+  }
+}
