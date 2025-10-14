@@ -20,8 +20,19 @@ export interface ParamSpec {
   default?: any;
 }
 
+export interface MemoryRegion {
+  start: number;
+  end: number;
+  size: number;
+  description: string;
+  access: 'read-only' | 'read-write' | 'write-only';
+  register?: string;
+  values?: Record<string, string> | string;
+  notes?: string[];
+}
+
 export class ReferenceLoader {
-  private cache: Map<string, Record<string, CommandReference>> = new Map();
+  private cache: Map<string, any> = new Map();
 
   constructor(private basePath: string = 'docs/reference') {}
 
@@ -73,5 +84,57 @@ export class ReferenceLoader {
   getCommand(platform: string, language: string, command: string): CommandReference | null {
     const commands = this.loadCommands(platform, language);
     return commands[command.toUpperCase()] || null;
+  }
+
+  loadMemoryMap(platform: string): Record<string, MemoryRegion> {
+    const cacheKey = `${platform}:memory-map`;
+
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    const path = join(this.basePath, `${platform}-reference`, 'memory-map.json');
+
+    try {
+      const fileContent = readFileSync(path, 'utf-8');
+      const memoryMap = JSON.parse(fileContent);
+
+      this.cache.set(cacheKey, memoryMap);
+      return memoryMap;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new Error(
+          `Memory map file not found: ${path}\n` +
+          `Platform: ${platform}\n` +
+          `Please ensure the memory map documentation exists for this platform.`
+        );
+      }
+
+      if (error instanceof SyntaxError) {
+        throw new Error(
+          `Invalid JSON in memory map file: ${path}\n` +
+          `Platform: ${platform}\n` +
+          `Parse error: ${error.message}`
+        );
+      }
+
+      throw new Error(
+        `Failed to load memory map file: ${path}\n` +
+        `Platform: ${platform}\n` +
+        `Error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  getMemoryRegion(platform: string, address: number): MemoryRegion | null {
+    const memoryMap = this.loadMemoryMap(platform);
+
+    for (const [name, region] of Object.entries(memoryMap)) {
+      if (address >= region.start && address <= region.end) {
+        return region;
+      }
+    }
+
+    return null;
   }
 }

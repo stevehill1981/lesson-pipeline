@@ -1,0 +1,167 @@
+{
+  "screen_memory": {
+    "start": 1024,
+    "end": 2023,
+    "size": 1000,
+    "description": "Default screen RAM (40x25 characters)",
+    "access": "read-write",
+    "notes": [
+      "Each byte is screen code (not PETSCII)",
+      "Address = 1024 + (row * 40) + column"
+    ]
+  },
+  "color_memory": {
+    "start": 55296,
+    "end": 56295,
+    "size": 1000,
+    "description": "Color RAM for screen characters",
+    "access": "read-write",
+    "notes": [
+      "Lower 4 bits only (0-15)",
+      "Parallel to screen memory (same offset calculations)"
+    ]
+  },
+  "border_color": {
+    "start": 53280,
+    "end": 53280,
+    "size": 1,
+    "description": "Screen border color",
+    "access": "read-write",
+    "register": "VIC-II $D020",
+    "values": {
+      "0": "black",
+      "1": "white",
+      "2": "red",
+      "3": "cyan",
+      "4": "purple",
+      "5": "green",
+      "6": "blue",
+      "7": "yellow",
+      "8": "orange",
+      "9": "brown",
+      "10": "light red",
+      "11": "dark grey",
+      "12": "grey",
+      "13": "light green",
+      "14": "light blue",
+      "15": "light grey"
+    }
+  },
+  "background_color": {
+    "start": 53281,
+    "end": 53281,
+    "size": 1,
+    "description": "Screen background color",
+    "access": "read-write",
+    "register": "VIC-II $D021",
+    "values": "same as border_color"
+  },
+  "sprite_data": {
+    "start": 832,
+    "end": 1023,
+    "size": 192,
+    "description": "Default sprite data area (3 sprites)",
+    "access": "read-write",
+    "notes": [
+      "Each sprite = 63 bytes (21 rows × 3 bytes)",
+      "Sprite 0: 832-894, Sprite 1: 896-958, Sprite 2: 960-1022",
+      "Can be relocated anywhere via sprite pointers"
+    ]
+  },
+  "sprite_pointers": {
+    "start": 2040,
+    "end": 2047,
+    "size": 8,
+    "description": "Sprite data pointers (screen RAM + 1016-1023)",
+    "access": "read-write",
+    "notes": [
+      "Value * 64 = sprite data address",
+      "Default: 13 (13*64=832) for sprite 0",
+      "Changes with screen RAM location"
+    ]
+  },
+  "sprite_enable": {
+    "start": 53269,
+    "end": 53269,
+    "size": 1,
+    "description": "Sprite enable register",
+    "access": "read-write",
+    "register": "VIC-II $D015",
+    "notes": [
+      "Bit 0 = sprite 0, bit 1 = sprite 1, etc.",
+      "Set bit to 1 to enable sprite"
+    ]
+  },
+  "sprite_x": {
+    "start": 53248,
+    "end": 53264,
+    "size": 16,
+    "description": "Sprite X coordinates (low byte) and MSB register",
+    "access": "read-write",
+    "register": "VIC-II $D000-$D010",
+    "notes": [
+      "Even addresses: X coordinate low byte (0-255)",
+      "$D010: X coordinate MSB for positions > 255"
+    ]
+  },
+  "sprite_y": {
+    "start": 53249,
+    "end": 53264,
+    "size": 8,
+    "description": "Sprite Y coordinates",
+    "access": "read-write",
+    "register": "VIC-II $D001,$D003,$D005...",
+    "notes": [
+      "Odd addresses from $D001-$D00F",
+      "Range: 0-255 (50-249 visible)"
+    ]
+  },
+  "sprite_collision": {
+    "start": 53279,
+    "end": 53279,
+    "size": 1,
+    "description": "Sprite-sprite collision register",
+    "access": "read-only",
+    "register": "VIC-II $D01E",
+    "notes": [
+      "Bit set when corresponding sprites collide",
+      "Reading clears the register"
+    ]
+  },
+  "keyboard_matrix": {
+    "start": 197,
+    "end": 197,
+    "size": 1,
+    "description": "Keyboard buffer (last key pressed)",
+    "access": "read-only",
+    "notes": [
+      "64 = no key pressed",
+      "Values 0-63 represent different keys",
+      "Not the same as PETSCII/screen codes"
+    ]
+  },
+  "sid_voice1_freq": {
+    "start": 54272,
+    "end": 54273,
+    "size": 2,
+    "description": "SID voice 1 frequency (16-bit)",
+    "access": "write-only",
+    "register": "SID $D400-$D401",
+    "notes": [
+      "Low byte then high byte",
+      "Frequency = value × 0.0596Hz"
+    ]
+  },
+  "sid_voice1_control": {
+    "start": 54276,
+    "end": 54276,
+    "size": 1,
+    "description": "SID voice 1 control register",
+    "access": "write-only",
+    "register": "SID $D404",
+    "notes": [
+      "Bit 0: gate (1=on, 0=off)",
+      "Bit 4-6: waveform (1=triangle, 2=sawtooth, 4=pulse, 8=noise)"
+    ]
+  }
+}
