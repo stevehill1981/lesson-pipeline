@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://code198x.stevehill.xyz/schemas/pattern-metadata.json",
+  "title": "Pattern Metadata",
+  "description": "Metadata for verified code patterns",
+  "type": "object",
+  "required": ["id", "week", "concept", "dependencies", "code", "teaching_notes", "wow_factor", "line_count"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "week": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "concept": {
+      "type": "string",
+      "description": "What concept this pattern teaches"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Pattern IDs this depends on"
+    },
+    "code": {
+      "type": "string",
+      "description": "The actual BASIC or Assembly code"
+    },
+    "data_statements": {
+      "type": "string",
+      "description": "Optional DATA statements for BASIC"
+    },
+    "memory_used": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "description": "Memory addresses used by this pattern"
+    },
+    "registers_touched": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "description": "Hardware registers accessed"
+    },
+    "teaching_notes": {
+      "type": "string",
+      "description": "How to teach this pattern to learners"
+    },
+    "wow_factor": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Visual/audio impact (1=subtle, 5=spectacular)"
+    },
+    "line_count": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of lines of code"
+    },
+    "optimization_level": {
+      "type": "string",
+      "enum": ["clear", "efficient", "professional"],
+      "description": "Code optimization level for pedagogical progression"
+    }
+  }
+}
