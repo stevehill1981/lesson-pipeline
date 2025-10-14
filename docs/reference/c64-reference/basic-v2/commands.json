@@ -144,6 +144,27 @@
       "IF X>100 THEN 500",
       "IF A$=\"YES\" THEN GOSUB 1000"
     ],
+    "requires": ["THEN"],
+    "since": "BASIC V2"
+  },
+  "THEN": {
+    "syntax": "IF condition THEN statement",
+    "category": "control",
+    "params": {
+      "statement": {
+        "type": "line-number|statement"
+      }
+    },
+    "description": "Part of IF statement, executes statement if condition is true",
+    "common_mistakes": [
+      "Cannot use THEN without IF",
+      "THEN line-number jumps to line, THEN statement executes inline"
+    ],
+    "examples": [
+      "IF A=10 THEN PRINT \"TEN\"",
+      "IF X>100 THEN 500"
+    ],
+    "requires": ["IF"],
     "since": "BASIC V2"
   },
   "GOTO": {
