@@ -1,0 +1,266 @@
+{
+  "PRINT": {
+    "syntax": "PRINT [expression [;|,] ...]",
+    "category": "io",
+    "params": {
+      "expression": {
+        "type": "string|number",
+        "optional": true
+      }
+    },
+    "description": "Outputs text or numbers to the screen",
+    "common_mistakes": [
+      "Forgetting semicolon causes newline",
+      "Comma advances to next tab position (10 char intervals)"
+    ],
+    "examples": [
+      "PRINT \"HELLO\"",
+      "PRINT A; B; C",
+      "PRINT \"SCORE:\"; SCORE"
+    ],
+    "since": "BASIC V2"
+  },
+  "POKE": {
+    "syntax": "POKE address, value",
+    "category": "memory",
+    "params": {
+      "address": {
+        "type": "integer",
+        "range": [0, 65535]
+      },
+      "value": {
+        "type": "integer",
+        "range": [0, 255]
+      }
+    },
+    "description": "Writes a byte value to memory address",
+    "common_mistakes": [
+      "POKE without comma separator",
+      "Value > 255 causes ILLEGAL QUANTITY ERROR",
+      "Poking wrong addresses can crash system"
+    ],
+    "examples": [
+      "POKE 53280,0 : REM BLACK BORDER",
+      "POKE 53281,1 : REM WHITE BACKGROUND",
+      "POKE 1024,1 : REM PUT 'A' AT TOP LEFT"
+    ],
+    "since": "BASIC V2"
+  },
+  "PEEK": {
+    "syntax": "PEEK(address)",
+    "category": "memory",
+    "params": {
+      "address": {
+        "type": "integer",
+        "range": [0, 65535]
+      }
+    },
+    "returns": "integer",
+    "description": "Reads a byte value from memory address",
+    "common_mistakes": [
+      "Parentheses are required",
+      "Returns value 0-255, not multi-byte values"
+    ],
+    "examples": [
+      "A = PEEK(53280) : REM READ BORDER COLOR",
+      "IF PEEK(197) <> 64 THEN 100 : REM KEY PRESSED"
+    ],
+    "since": "BASIC V2"
+  },
+  "FOR": {
+    "syntax": "FOR variable = start TO end [STEP increment]",
+    "category": "control",
+    "params": {
+      "variable": {
+        "type": "numeric-variable"
+      },
+      "start": {
+        "type": "number"
+      },
+      "end": {
+        "type": "number"
+      },
+      "increment": {
+        "type": "number",
+        "optional": true,
+        "default": 1
+      }
+    },
+    "description": "Begins a loop that counts from start to end",
+    "common_mistakes": [
+      "Forgetting NEXT statement causes SYNTAX ERROR",
+      "Variable in NEXT must match FOR variable",
+      "Nested loops must have different variables"
+    ],
+    "examples": [
+      "FOR I=1 TO 10",
+      "FOR X=0 TO 39 STEP 2",
+      "FOR T=100 TO 1 STEP -1"
+    ],
+    "requires": ["NEXT"],
+    "since": "BASIC V2"
+  },
+  "NEXT": {
+    "syntax": "NEXT [variable]",
+    "category": "control",
+    "params": {
+      "variable": {
+        "type": "numeric-variable",
+        "optional": true
+      }
+    },
+    "description": "Marks end of FOR loop",
+    "common_mistakes": [
+      "Variable should match FOR variable for clarity",
+      "Missing NEXT causes SYNTAX ERROR on RUN"
+    ],
+    "examples": [
+      "NEXT I",
+      "NEXT",
+      "NEXT X"
+    ],
+    "requires": ["FOR"],
+    "since": "BASIC V2"
+  },
+  "IF": {
+    "syntax": "IF condition THEN statement",
+    "category": "control",
+    "params": {
+      "condition": {
+        "type": "boolean-expression"
+      },
+      "statement": {
+        "type": "line-number|statement"
+      }
+    },
+    "description": "Executes statement if condition is true",
+    "common_mistakes": [
+      "ELSE doesn't exist in BASIC V2",
+      "Multiple statements require THEN line-number",
+      "String comparisons are case-sensitive"
+    ],
+    "examples": [
+      "IF A=10 THEN PRINT \"TEN\"",
+      "IF X>100 THEN 500",
+      "IF A$=\"YES\" THEN GOSUB 1000"
+    ],
+    "since": "BASIC V2"
+  },
+  "GOTO": {
+    "syntax": "GOTO line-number",
+    "category": "control",
+    "params": {
+      "line-number": {
+        "type": "integer",
+        "range": [0, 63999]
+      }
+    },
+    "description": "Jumps to specified line number",
+    "common_mistakes": [
+      "Jumping to non-existent line causes UNDEF'D STATEMENT ERROR",
+      "Excessive GOTO creates spaghetti code"
+    ],
+    "examples": [
+      "GOTO 100",
+      "IF A=0 THEN GOTO 500"
+    ],
+    "since": "BASIC V2"
+  },
+  "GOSUB": {
+    "syntax": "GOSUB line-number",
+    "category": "control",
+    "params": {
+      "line-number": {
+        "type": "integer",
+        "range": [0, 63999]
+      }
+    },
+    "description": "Calls subroutine at line number",
+    "common_mistakes": [
+      "Subroutine must end with RETURN",
+      "Forgetting RETURN causes program to continue",
+      "Too many nested GOSUBs (>23) causes OUT OF MEMORY"
+    ],
+    "examples": [
+      "GOSUB 1000",
+      "IF SCORE>100 THEN GOSUB 2000"
+    ],
+    "requires": ["RETURN"],
+    "since": "BASIC V2"
+  },
+  "RETURN": {
+    "syntax": "RETURN",
+    "category": "control",
+    "description": "Returns from GOSUB subroutine",
+    "common_mistakes": [
+      "RETURN without GOSUB causes RETURN WITHOUT GOSUB ERROR",
+      "Jumping into middle of subroutine breaks RETURN"
+    ],
+    "examples": [
+      "RETURN"
+    ],
+    "requires": ["GOSUB"],
+    "since": "BASIC V2"
+  },
+  "REM": {
+    "syntax": "REM comment",
+    "category": "utility",
+    "params": {
+      "comment": {
+        "type": "text"
+      }
+    },
+    "description": "Comment line, ignored by interpreter",
+    "common_mistakes": [
+      "REM slows program execution (still stored in memory)",
+      "Everything after REM is ignored, even valid BASIC"
+    ],
+    "examples": [
+      "REM THIS IS A COMMENT",
+      "10 REM INITIALIZE VARIABLES"
+    ],
+    "since": "BASIC V2"
+  },
+  "AND": {
+    "syntax": "expression AND expression",
+    "category": "operator",
+    "params": {
+      "expression": {
+        "type": "number"
+      }
+    },
+    "returns": "number",
+    "description": "Bitwise AND operation (also logical AND for comparisons)",
+    "common_mistakes": [
+      "Not boolean-only, also does bitwise operations",
+      "Operator precedence can surprise (use parentheses)"
+    ],
+    "examples": [
+      "IF A>5 AND B<10 THEN 100",
+      "C = A AND B : REM BITWISE",
+      "IF (X=1 AND Y=2) OR Z=3 THEN 200"
+    ],
+    "since": "BASIC V2"
+  },
+  "OR": {
+    "syntax": "expression OR expression",
+    "category": "operator",
+    "params": {
+      "expression": {
+        "type": "number"
+      }
+    },
+    "returns": "number",
+    "description": "Bitwise OR operation (also logical OR for comparisons)",
+    "common_mistakes": [
+      "Not boolean-only, also does bitwise operations",
+      "Operator precedence can surprise (use parentheses)"
+    ],
+    "examples": [
+      "IF A=1 OR B=2 THEN 100",
+      "C = A OR B : REM BITWISE",
+      "IF X<0 OR X>39 THEN 500"
+    ],
+    "since": "BASIC V2"
+  }
+}
