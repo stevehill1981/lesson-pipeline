@@ -34,6 +34,7 @@ export interface PatternMetadata {
   teaching_notes: string;
   wow_factor: number;
   line_count: number;
+  optimization_level?: 'clear' | 'efficient' | 'professional';
 }
 
 export interface TestConfiguration {
