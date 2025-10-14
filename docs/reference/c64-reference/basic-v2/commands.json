@@ -283,5 +283,301 @@
       "IF X<0 OR X>39 THEN 500"
     ],
     "since": "BASIC V2"
+  },
+  "END": {
+    "syntax": "END",
+    "category": "control",
+    "description": "Terminates program execution",
+    "common_mistakes": [
+      "Not required but good practice",
+      "Program stops when reaching END or end of code"
+    ],
+    "examples": [
+      "END"
+    ],
+    "since": "BASIC V2"
+  },
+  "STOP": {
+    "syntax": "STOP",
+    "category": "control",
+    "description": "Pauses program execution, displays BREAK message",
+    "common_mistakes": [
+      "Unlike END, allows CONT to resume",
+      "Often used for debugging"
+    ],
+    "examples": [
+      "STOP",
+      "IF ERROR THEN STOP"
+    ],
+    "since": "BASIC V2"
+  },
+  "READ": {
+    "syntax": "READ variable[, variable...]",
+    "category": "io",
+    "params": {
+      "variable": {
+        "type": "variable"
+      }
+    },
+    "description": "Reads values from DATA statements",
+    "common_mistakes": [
+      "Must have matching DATA statements",
+      "OUT OF DATA ERROR if no data left"
+    ],
+    "examples": [
+      "READ A",
+      "READ X, Y, Z"
+    ],
+    "requires": ["DATA"],
+    "since": "BASIC V2"
+  },
+  "DATA": {
+    "syntax": "DATA value[, value...]",
+    "category": "io",
+    "params": {
+      "value": {
+        "type": "number|string"
+      }
+    },
+    "description": "Stores data values for READ statements",
+    "common_mistakes": [
+      "Strings don't need quotes unless they contain commas",
+      "Data is read sequentially across all DATA statements"
+    ],
+    "examples": [
+      "DATA 10, 20, 30",
+      "DATA HELLO, WORLD"
+    ],
+    "requires": ["READ"],
+    "since": "BASIC V2"
+  },
+  "INPUT": {
+    "syntax": "INPUT [prompt;] variable[, variable...]",
+    "category": "io",
+    "params": {
+      "prompt": {
+        "type": "string",
+        "optional": true
+      },
+      "variable": {
+        "type": "variable"
+      }
+    },
+    "description": "Waits for user input from keyboard",
+    "common_mistakes": [
+      "Semicolon after prompt removes the '?' character",
+      "Type mismatch error if entering wrong data type"
+    ],
+    "examples": [
+      "INPUT A",
+      "INPUT \"NAME\"; N$",
+      "INPUT \"X,Y\"; X, Y"
+    ],
+    "since": "BASIC V2"
+  },
+  "GET": {
+    "syntax": "GET variable",
+    "category": "io",
+    "params": {
+      "variable": {
+        "type": "string-variable"
+      }
+    },
+    "description": "Gets single character from keyboard without waiting",
+    "common_mistakes": [
+      "Returns empty string if no key pressed",
+      "Must be in loop to catch key press"
+    ],
+    "examples": [
+      "GET K$",
+      "IF K$=\"\" THEN 100"
+    ],
+    "since": "BASIC V2"
+  },
+  "SYS": {
+    "syntax": "SYS address",
+    "category": "system",
+    "params": {
+      "address": {
+        "type": "integer",
+        "range": [0, 65535]
+      }
+    },
+    "description": "Calls machine language routine at address",
+    "common_mistakes": [
+      "Calling wrong address can crash system",
+      "Must know what routine expects"
+    ],
+    "examples": [
+      "SYS 64738 : REM CLEAR SCREEN"
+    ],
+    "since": "BASIC V2"
+  },
+  "LET": {
+    "syntax": "LET variable = expression",
+    "category": "assignment",
+    "params": {
+      "variable": {
+        "type": "variable"
+      },
+      "expression": {
+        "type": "any"
+      }
+    },
+    "description": "Assigns value to variable (optional keyword)",
+    "common_mistakes": [
+      "LET is optional in BASIC V2",
+      "Most programmers omit it"
+    ],
+    "examples": [
+      "LET A = 10",
+      "A = 10"
+    ],
+    "since": "BASIC V2"
+  },
+  "DIM": {
+    "syntax": "DIM array(size[, size...])",
+    "category": "memory",
+    "params": {
+      "array": {
+        "type": "array-variable"
+      },
+      "size": {
+        "type": "integer"
+      }
+    },
+    "description": "Declares array dimensions",
+    "common_mistakes": [
+      "Default arrays are 0-10 without DIM",
+      "Cannot redimension after first use"
+    ],
+    "examples": [
+      "DIM A(20)",
+      "DIM B%(100,100)"
+    ],
+    "since": "BASIC V2"
+  },
+  "NEW": {
+    "syntax": "NEW",
+    "category": "utility",
+    "description": "Erases program in memory",
+    "common_mistakes": [
+      "Cannot be undone",
+      "Doesn't affect disk files"
+    ],
+    "examples": [
+      "NEW"
+    ],
+    "since": "BASIC V2"
+  },
+  "LIST": {
+    "syntax": "LIST [start[-end]]",
+    "category": "utility",
+    "params": {
+      "start": {
+        "type": "integer",
+        "optional": true
+      },
+      "end": {
+        "type": "integer",
+        "optional": true
+      }
+    },
+    "description": "Displays program listing",
+    "common_mistakes": [
+      "LIST without args shows whole program",
+      "Can specify range: LIST 100-200"
+    ],
+    "examples": [
+      "LIST",
+      "LIST 100",
+      "LIST 100-200"
+    ],
+    "since": "BASIC V2"
+  },
+  "RUN": {
+    "syntax": "RUN [line-number]",
+    "category": "utility",
+    "params": {
+      "line-number": {
+        "type": "integer",
+        "optional": true
+      }
+    },
+    "description": "Executes program",
+    "common_mistakes": [
+      "Clears all variables",
+      "Optional line number starts execution there"
+    ],
+    "examples": [
+      "RUN",
+      "RUN 100"
+    ],
+    "since": "BASIC V2"
+  },
+  "LOAD": {
+    "syntax": "LOAD \"filename\" [, device [, secondary]]",
+    "category": "io",
+    "params": {
+      "filename": {
+        "type": "string"
+      },
+      "device": {
+        "type": "integer",
+        "optional": true,
+        "default": 8
+      },
+      "secondary": {
+        "type": "integer",
+        "optional": true
+      }
+    },
+    "description": "Loads program from disk",
+    "common_mistakes": [
+      "Device 8 is disk drive",
+      "Secondary address 1 loads to address in file"
+    ],
+    "examples": [
+      "LOAD \"GAME\"",
+      "LOAD \"*\", 8, 1"
+    ],
+    "since": "BASIC V2"
+  },
+  "SAVE": {
+    "syntax": "SAVE \"filename\" [, device]",
+    "category": "io",
+    "params": {
+      "filename": {
+        "type": "string"
+      },
+      "device": {
+        "type": "integer",
+        "optional": true,
+        "default": 8
+      }
+    },
+    "description": "Saves program to disk",
+    "common_mistakes": [
+      "Overwrites existing file with same name",
+      "Device 8 is disk drive"
+    ],
+    "examples": [
+      "SAVE \"GAME\"",
+      "SAVE \"BACKUP\", 8"
+    ],
+    "since": "BASIC V2"
+  },
+  "CLR": {
+    "syntax": "CLR",
+    "category": "utility",
+    "description": "Clears all variables",
+    "common_mistakes": [
+      "Doesn't erase program",
+      "Also resets DATA pointer"
+    ],
+    "examples": [
+      "CLR"
+    ],
+    "since": "BASIC V2"
   }
 }
