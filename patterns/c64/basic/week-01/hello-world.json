@@ -1,0 +1,11 @@
+{
+  "id": "hello-world",
+  "week": 1,
+  "concept": "print-statement",
+  "dependencies": [],
+  "code": "10 PRINT \"HELLO, WORLD!\"\n20 END",
+  "teaching_notes": "Introduces PRINT command and string literals",
+  "wow_factor": 1,
+  "line_count": 2,
+  "optimization_level": "clear"
+}
