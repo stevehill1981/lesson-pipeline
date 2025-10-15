@@ -1,0 +1,15 @@
+FROM debian:bullseye-slim
+
+RUN apt-get update && apt-get install -y \
+    vice \
+    ffmpeg \
+    xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Wrapper script for headless VICE
+COPY vice-headless.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/vice-headless.sh
+
+CMD ["/bin/bash"]
