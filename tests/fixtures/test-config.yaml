@@ -1,0 +1,26 @@
+platform: c64
+program: lesson-18.bas
+runtime: 30s
+
+inputs:
+  - time: 2s
+    device: keyboard
+    key: SPACE
+  - time: 5s
+    device: joystick
+    port: 2
+    action: UP
+
+captures:
+  screenshots:
+    - time: 0s
+      name: initial-state.png
+    - time: 10s
+      name: after-input.png
+  video:
+    start: 0s
+    end: 15s
+    name: full-demo.mp4
+  audio:
+    format: wav
+    name: sound-effects.wav
