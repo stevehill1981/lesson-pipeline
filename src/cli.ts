@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { validateCommand } from './commands/validate.js';
+import { registerCaptureCommand } from './commands/capture.js';
 
 const program = new Command();
 
@@ -16,5 +17,8 @@ program
   .argument('<file>', 'Path to code file')
   .option('-p, --platform <platform>', 'Platform (c64, spectrum, etc.)', 'c64')
   .action(validateCommand);
+
+// Register capture command
+registerCaptureCommand(program);
 
 program.parse();

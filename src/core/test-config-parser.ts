@@ -1,62 +1,97 @@
 import { readFileSync } from 'fs';
 import YAML from 'yaml';
+import Ajv from 'ajv';
+import { resolve } from 'path';
 
-export interface TestConfig {
-  platform: string;
-  program: string;
-  runtime: string;
-  inputs?: TestInput[];
-  captures?: CaptureConfig;
+export interface TestConfiguration {
+  platform: 'c64' | 'spectrum' | 'nes' | 'amiga';
+  phase: number;
+  tier: number;
+  lesson: number;
+  title?: string;
+  program: ProgramConfig;
+  execution: ExecutionConfig;
+  captures?: CapturesConfig;
 }
 
-export interface TestInput {
-  time: string;
-  device: 'keyboard' | 'joystick';
-  key?: string;
-  port?: number;
-  action?: string;
-  duration?: string;
+export interface ProgramConfig {
+  type: 'basic' | 'assembly';
+  file: string;
 }
 
-export interface CaptureConfig {
-  screenshots?: Screenshot[];
+export interface ExecutionConfig {
+  duration: number;  // seconds
+  autoRun?: boolean;
+}
+
+export interface CapturesConfig {
+  screenshots?: ScreenshotConfig[];
   video?: VideoConfig;
-  audio?: AudioConfig;
 }
 
-export interface Screenshot {
-  time: string;
+export interface ScreenshotConfig {
   name: string;
+  time: number;  // seconds
+  description?: string;
 }
 
 export interface VideoConfig {
-  start: string;
-  end: string;
-  name: string;
-}
-
-export interface AudioConfig {
-  format: string;
-  name: string;
+  enabled: boolean;
+  duration?: number;  // seconds
+  fps?: number;
+  description?: string;
 }
 
 export class TestConfigParser {
-  parse(filePath: string): TestConfig {
+  private ajv: Ajv;
+  private schemaPath: string;
+
+  constructor() {
+    this.ajv = new Ajv();
+    // Schema is in lesson-pipeline/schemas/
+    this.schemaPath = resolve(__dirname, '../../schemas/test-configuration.schema.json');
+  }
+
+  parse(filePath: string): TestConfiguration {
     const content = readFileSync(filePath, 'utf-8');
     const config = YAML.parse(content);
 
-    if (!config.platform || !config.program || !config.runtime) {
-      throw new Error('Missing required fields: platform, program, runtime');
-    }
+    // Validate against schema
+    this.validate(config);
 
-    return config as TestConfig;
+    return config as TestConfiguration;
   }
 
-  parseTimeToMs(time: string): number {
-    const match = time.match(/^(\d+)s$/);
-    if (!match) {
-      throw new Error(`Invalid time format: ${time}. Expected format: "5s"`);
+  private validate(config: any): void {
+    const schemaContent = readFileSync(this.schemaPath, 'utf-8');
+    const schema = JSON.parse(schemaContent);
+
+    const validate = this.ajv.compile(schema);
+    const valid = validate(config);
+
+    if (!valid) {
+      const errors = validate.errors?.map(err => `${err.instancePath} ${err.message}`).join('; ');
+      throw new Error(`Invalid test configuration: ${errors}`);
     }
-    return parseInt(match[1]) * 1000;
+  }
+
+  /**
+   * Get output directory path for captures based on test configuration
+   */
+  getOutputDir(config: TestConfiguration, baseDir: string = './output'): string {
+    return resolve(
+      baseDir,
+      config.platform,
+      `phase-${config.phase}`,
+      `tier-${config.tier}`,
+      `lesson-${String(config.lesson).padStart(3, '0')}`
+    );
+  }
+
+  /**
+   * Get relative path for embedding in MDX
+   */
+  getRelativePath(config: TestConfiguration): string {
+    return `/images/${config.platform}/phase-${config.phase}/tier-${config.tier}/lesson-${String(config.lesson).padStart(3, '0')}`;
   }
 }

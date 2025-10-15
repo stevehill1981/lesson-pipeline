@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://code198x.com/schemas/test-configuration.schema.json",
+  "title": "Test Configuration",
+  "description": "Configuration for automated testing and media capture of retro platform programs",
+  "type": "object",
+  "required": ["platform", "phase", "tier", "lesson", "program", "execution"],
+  "properties": {
+    "platform": {
+      "type": "string",
+      "enum": ["c64", "spectrum", "nes", "amiga"],
+      "description": "Target platform for the program"
+    },
+    "phase": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Course phase number (0 for BASIC, 1+ for Assembly)"
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Tier number within the phase"
+    },
+    "lesson": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Lesson number within the tier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable lesson title"
+    },
+    "program": {
+      "type": "object",
+      "required": ["type", "file"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["basic", "assembly"],
+          "description": "Programming language of the program"
+        },
+        "file": {
+          "type": "string",
+          "description": "Path to the program file (.bas or .asm)"
+        }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "required": ["duration"],
+      "properties": {
+        "duration": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How long to run the program (seconds)"
+        },
+        "autoRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run the program after loading"
+        }
+      }
+    },
+    "captures": {
+      "type": "object",
+      "description": "Media capture configuration",
+      "properties": {
+        "screenshots": {
+          "type": "array",
+          "description": "Screenshots to capture at specific timestamps",
+          "items": {
+            "type": "object",
+            "required": ["name", "time"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Filename for the screenshot (without extension)"
+              },
+              "time": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Seconds after program start to capture"
+              },
+              "description": {
+                "type": "string",
+                "description": "Human-readable description of what this captures"
+              }
+            }
+          }
+        },
+        "video": {
+          "type": "object",
+          "description": "Video capture configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false,
+              "description": "Whether to record video"
+            },
+            "duration": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Duration of video recording (seconds)"
+            },
+            "fps": {
+              "type": "integer",
+              "default": 30,
+              "minimum": 15,
+              "maximum": 60,
+              "description": "Frames per second for video recording"
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable description of what this video shows"
+            }
+          }
+        }
+      }
+    }
+  }
+}

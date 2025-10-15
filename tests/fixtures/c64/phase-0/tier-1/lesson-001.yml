@@ -1,0 +1,29 @@
+platform: c64
+phase: 0
+tier: 1
+lesson: 1
+title: "Talk to Me"
+
+program:
+  type: basic
+  file: "/Users/stevehill/Projects/Code198x/code-samples/commodore-64/phase-0/tier-1/lesson-001/main.bas"
+
+execution:
+  duration: 30
+  autoRun: true
+
+captures:
+  screenshots:
+    - name: "wow-moment"
+      time: 10
+      description: "Infinite HELLO loop filling screen"
+
+    - name: "screen-full"
+      time: 25
+      description: "Screen completely filled with HELLO text"
+
+  video:
+    enabled: true
+    duration: 15
+    fps: 30
+    description: "Full execution showing the infinite PRINT loop"
