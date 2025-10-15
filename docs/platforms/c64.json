@@ -1,0 +1,32 @@
+{
+  "id": "c64",
+  "name": "Commodore 64",
+  "languages": [
+    {
+      "id": "basic-v2",
+      "name": "BASIC V2",
+      "validator": "basic-validator",
+      "compiler": "petcat",
+      "file_extension": ".bas",
+      "reference_docs": "c64-reference/basic-v2/"
+    },
+    {
+      "id": "6510-assembly",
+      "name": "6510 Assembly",
+      "validator": "asm-validator",
+      "assembler": "acme",
+      "file_extension": ".asm",
+      "reference_docs": "c64-reference/assembly-6510/"
+    }
+  ],
+  "emulator": {
+    "name": "VICE",
+    "command": "x64sc",
+    "headless_flag": "-console",
+    "controller": "vice-automation"
+  },
+  "lesson_time_limits": {
+    "basic-v2": "15-20min",
+    "6510-assembly": "20-30min"
+  }
+}
