@@ -79,30 +79,46 @@ export class BasicValidator {
     const hasFor = tokens.some(t => t.value === 'FOR');
     const hasNext = tokens.some(t => t.value === 'NEXT');
 
-    // Check POKE syntax
-    const pokeIdx = tokens.findIndex(t => t.value === 'POKE');
-    if (pokeIdx >= 0) {
-      const afterPoke = tokens.slice(pokeIdx + 1);
-      const hasComma = afterPoke.some(t => t.value === ',');
+    // Check POKE syntax (handle multiple POKEs on same line)
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i].value === 'POKE') {
+        // Find tokens until next colon or end of statement
+        let j = i + 1;
+        while (j < tokens.length && tokens[j].value !== ':') {
+          j++;
+        }
+        const pokeTokens = tokens.slice(i + 1, j);
 
-      if (!hasComma) {
-        errors.push({
-          line: lineNum,
-          message: 'POKE requires comma between address and value',
-          severity: 'error'
-        });
-      }
-
-      // Check for value > 255
-      const numbers = afterPoke.filter(t => t.type === 'number');
-      if (numbers.length >= 2) {
-        const value = parseInt(numbers[1].value);
-        if (value > 255) {
+        const commaIdx = pokeTokens.findIndex(t => t.value === ',');
+        if (commaIdx === -1) {
           errors.push({
             line: lineNum,
-            message: 'POKE value must be 0-255',
+            message: 'POKE requires comma between address and value',
             severity: 'error'
           });
+        } else {
+          // Check for constant value > 255 after comma (ignore variables and expressions)
+          // Only check if value is a simple literal number, not inside function calls
+          const tokensAfterComma = pokeTokens.slice(commaIdx + 1);
+
+          // Skip check if value contains function calls (PEEK, CHR$, ASC, etc.) or parentheses
+          const hasFunctionCall = tokensAfterComma.some(t =>
+            t.type === 'keyword' || t.value === '(' || t.value === ')'
+          );
+
+          if (!hasFunctionCall) {
+            const firstNumber = tokensAfterComma.find(t => t.type === 'number');
+            if (firstNumber) {
+              const value = parseInt(firstNumber.value);
+              if (value > 255) {
+                errors.push({
+                  line: lineNum,
+                  message: 'POKE value must be 0-255',
+                  severity: 'error'
+                });
+              }
+            }
+          }
         }
       }
     }

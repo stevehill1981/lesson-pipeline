@@ -223,6 +223,33 @@
     "requires": ["GOSUB"],
     "since": "BASIC V2"
   },
+  "ON": {
+    "syntax": "ON expression GOTO|GOSUB line1[, line2, line3...]",
+    "category": "control",
+    "params": {
+      "expression": {
+        "type": "integer",
+        "description": "Value determines which line to jump to (1=first, 2=second, etc)"
+      },
+      "line": {
+        "type": "integer",
+        "range": [0, 63999]
+      }
+    },
+    "description": "Multi-way branch based on expression value",
+    "common_mistakes": [
+      "Expression < 1 or > number of lines causes next statement to execute",
+      "Expression must be integer, not string",
+      "Can use ON...GOTO for jumps or ON...GOSUB for subroutine calls"
+    ],
+    "examples": [
+      "ON X GOTO 100, 200, 300",
+      "ON MENU GOSUB 1000, 2000, 3000",
+      "ON INT(RND(1)*3)+1 GOTO 10, 20, 30"
+    ],
+    "requires": ["GOTO", "GOSUB"],
+    "since": "BASIC V2"
+  },
   "REM": {
     "syntax": "REM comment",
     "category": "utility",
@@ -349,6 +376,29 @@
       "DATA HELLO, WORLD"
     ],
     "requires": ["READ"],
+    "since": "BASIC V2"
+  },
+  "RESTORE": {
+    "syntax": "RESTORE [line_number]",
+    "category": "control",
+    "params": {
+      "line_number": {
+        "type": "integer",
+        "optional": true
+      }
+    },
+    "description": "Resets DATA pointer to first DATA statement or specified line",
+    "common_mistakes": [
+      "Without line number, resets to first DATA statement",
+      "With line number, sets to DATA statement at that line",
+      "Useful for re-reading DATA multiple times"
+    ],
+    "examples": [
+      "RESTORE",
+      "RESTORE 1000",
+      "FOR I=1 TO 10: READ A: PRINT A: NEXT: RESTORE"
+    ],
+    "requires": ["DATA", "READ"],
     "since": "BASIC V2"
   },
   "INPUT": {
@@ -578,6 +628,173 @@
     "examples": [
       "CLR"
     ],
+    "since": "BASIC V2"
+  },
+  "OPEN": {
+    "syntax": "OPEN logical_file, device, secondary [, \"filename\"]",
+    "category": "io",
+    "params": {
+      "logical_file": {
+        "type": "integer",
+        "range": [1, 255],
+        "description": "Logical file number for future reference"
+      },
+      "device": {
+        "type": "integer",
+        "description": "Device number (8=disk, 4=printer, etc.)"
+      },
+      "secondary": {
+        "type": "integer",
+        "description": "Secondary address/channel"
+      },
+      "filename": {
+        "type": "string",
+        "optional": true,
+        "description": "Filename for disk operations"
+      }
+    },
+    "description": "Opens file or device for input/output",
+    "common_mistakes": [
+      "Must CLOSE file when done",
+      "Forgetting comma after secondary address",
+      "Using same logical file number twice"
+    ],
+    "examples": [
+      "OPEN 1,8,2,\"DATA,S,W\"",
+      "OPEN 2,4",
+      "OPEN 15,8,15"
+    ],
+    "since": "BASIC V2"
+  },
+  "CLOSE": {
+    "syntax": "CLOSE logical_file",
+    "category": "io",
+    "params": {
+      "logical_file": {
+        "type": "integer",
+        "range": [1, 255]
+      }
+    },
+    "description": "Closes previously opened file",
+    "common_mistakes": [
+      "Forgetting to CLOSE causes file corruption",
+      "Closing unopened file has no effect"
+    ],
+    "examples": [
+      "CLOSE 1",
+      "CLOSE 15"
+    ],
+    "requires": ["OPEN"],
+    "since": "BASIC V2"
+  },
+  "PRINT#": {
+    "syntax": "PRINT#logical_file, expression [; expression...]",
+    "category": "io",
+    "params": {
+      "logical_file": {
+        "type": "integer",
+        "range": [1, 255]
+      },
+      "expression": {
+        "type": "string|number"
+      }
+    },
+    "description": "Writes data to opened file",
+    "common_mistakes": [
+      "File must be OPENed first",
+      "Semicolon suppresses newline like regular PRINT",
+      "Use CHR$(13) for explicit carriage return"
+    ],
+    "examples": [
+      "PRINT#1,NAME$",
+      "PRINT#1,NAME$;\",\";SCORE",
+      "PRINT#2,\"DATA:\";X;Y;Z"
+    ],
+    "requires": ["OPEN"],
+    "since": "BASIC V2"
+  },
+  "FRE": {
+    "syntax": "FRE(dummy)",
+    "category": "utility",
+    "params": {
+      "dummy": {
+        "type": "number",
+        "description": "Dummy argument (typically 0), triggers garbage collection if string"
+      }
+    },
+    "returns": "integer",
+    "description": "Returns number of free BASIC memory bytes",
+    "common_mistakes": [
+      "FRE(0) returns available memory without garbage collection",
+      "FRE(\"\") forces garbage collection first, then returns free memory",
+      "Useful for detecting memory pressure"
+    ],
+    "examples": [
+      "F=FRE(0)",
+      "PRINT \"FREE:\";FRE(0)",
+      "IF FRE(0)<1000 THEN PRINT \"LOW MEMORY\""
+    ],
+    "since": "BASIC V2"
+  },
+  "ERR": {
+    "syntax": "ERR",
+    "category": "error",
+    "returns": "integer",
+    "description": "Returns error code of last error (used with ON ERROR GOTO)",
+    "common_mistakes": [
+      "Only valid after an error has occurred",
+      "Error codes: 1=TOO MANY FILES, 2=FILE OPEN, 4=FILE NOT FOUND, etc.",
+      "ERR is cleared when RESUME executes"
+    ],
+    "examples": [
+      "PRINT ERR",
+      "IF ERR=4 THEN PRINT \"FILE NOT FOUND\"",
+      "ON ERROR GOTO 900: ... 900 PRINT \"ERROR\";ERR"
+    ],
+    "requires": ["ON ERROR GOTO"],
+    "since": "BASIC V2"
+  },
+  "ERL": {
+    "syntax": "ERL",
+    "category": "error",
+    "returns": "integer",
+    "description": "Returns line number where last error occurred (used with ON ERROR GOTO)",
+    "common_mistakes": [
+      "Only valid after an error has occurred",
+      "Returns 0 if error in direct mode",
+      "ERL is cleared when RESUME executes"
+    ],
+    "examples": [
+      "PRINT ERL",
+      "PRINT \"ERROR AT LINE\";ERL",
+      "ON ERROR GOTO 900: ... 900 PRINT \"LINE\";ERL;\"ERR\";ERR"
+    ],
+    "requires": ["ON ERROR GOTO"],
+    "since": "BASIC V2"
+  },
+  "RESUME": {
+    "syntax": "RESUME [NEXT|line-number]",
+    "category": "error",
+    "params": {
+      "target": {
+        "type": "NEXT|line-number",
+        "optional": true,
+        "description": "RESUME=retry same line, RESUME NEXT=continue after error, RESUME n=jump to line"
+      }
+    },
+    "description": "Continues program execution after error handler (used with ON ERROR GOTO)",
+    "common_mistakes": [
+      "RESUME retries the line that caused the error",
+      "RESUME NEXT continues at next statement after error",
+      "RESUME n jumps to specific line number",
+      "Using RESUME without ON ERROR GOTO causes error"
+    ],
+    "examples": [
+      "RESUME",
+      "RESUME NEXT",
+      "RESUME 100"
+    ],
+    "requires": ["ON ERROR GOTO"],
     "since": "BASIC V2"
   }
 }

@@ -6,15 +6,17 @@ export interface BasicToken {
 
 export class BasicTokenizer {
   private commands = [
-    'PRINT', 'POKE', 'PEEK', 'FOR', 'NEXT', 'IF', 'THEN', 'GOTO', 'GOSUB',
-    'RETURN', 'REM', 'END', 'STOP', 'READ', 'DATA', 'INPUT', 'GET', 'SYS',
-    'LET', 'DIM', 'NEW', 'LIST', 'RUN', 'LOAD', 'SAVE', 'CLR'
+    'PRINT#', 'PRINT', 'POKE', 'PEEK', 'FOR', 'NEXT', 'IF', 'THEN', 'GOTO', 'GOSUB',
+    'RETURN', 'REM', 'END', 'STOP', 'READ', 'DATA', 'RESTORE', 'INPUT', 'GET',
+    'SYS', 'LET', 'DIM', 'NEW', 'LIST', 'RUN', 'LOAD', 'SAVE', 'CLR', 'ON',
+    'OPEN', 'CLOSE', 'RESUME'
   ];
 
   private keywords = [
     'AND', 'OR', 'NOT', 'TO', 'STEP', 'FN', 'SPC', 'TAB',
     'LEFT$', 'RIGHT$', 'MID$', 'LEN', 'STR$', 'VAL', 'ASC', 'CHR$',
-    'RND', 'INT', 'ABS', 'SGN', 'SIN', 'COS', 'TAN', 'ATN', 'EXP', 'LOG', 'SQR'
+    'RND', 'INT', 'ABS', 'SGN', 'SIN', 'COS', 'TAN', 'ATN', 'EXP', 'LOG', 'SQR',
+    'FRE', 'ERR', 'ERL'
   ];
 
   tokenize(line: string): BasicToken[] {
@@ -91,6 +93,17 @@ export class BasicTokenizer {
 
   private tokenizePart(part: string): BasicToken[] {
     const upper = part.toUpperCase();
+
+    // Special case: PRINT# followed by number (e.g., PRINT#1)
+    if (upper.startsWith('PRINT#')) {
+      const rest = upper.substring(6); // After "PRINT#"
+      const tokens: BasicToken[] = [{ type: 'command', value: 'PRINT#' }];
+      if (rest) {
+        // Recursively tokenize the rest (usually a number)
+        tokens.push(...this.tokenizePart(rest));
+      }
+      return tokens;
+    }
 
     // Check for commands
     if (this.commands.includes(upper)) {
