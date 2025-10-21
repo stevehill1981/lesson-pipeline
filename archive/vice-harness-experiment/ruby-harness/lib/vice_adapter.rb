@@ -13,11 +13,20 @@ require_relative 'emulator_adapter'
 class VICEAdapter
   include EmulatorAdapter
 
+  # C64 BASIC READY loop address - perfect breakpoint location
+  BASIC_READY_LOOP = 0xE5D4
+
+  # C64 keyboard buffer addresses
+  KEYBOARD_BUFFER = 0x0277  # 10-byte buffer
+  KEYBOARD_BUFFER_LENGTH = 0x00C6
+
   def initialize(port: 6510, timeout: 5)
     @port = port
     @timeout = timeout
     @socket = nil
     @connected = false
+    @c64_booted = false
+    @breakpoint_set = false
   end
 
   def name
@@ -129,24 +138,75 @@ class VICEAdapter
   def inject_keys(keys)
     raise 'Not connected' unless alive?
 
-    # Convert newline character to RETURN key escape sequence for VICE
-    # Replace actual \n with the string "\x0d" that VICE keybuf expects
-    processed_keys = keys.gsub("\n", '\x0d')
+    # Ensure C64 is booted and breakpoint is set
+    ensure_breakpoint_set
 
-    # Escape double quotes for the monitor command
-    processed_keys = processed_keys.gsub('"', '\"')
+    # Convert ASCII to PETSCII codes
+    petscii_codes = ascii_to_petscii(keys)
 
-    # VICE monitor keybuf command: keybuf "string"
-    # Special keys use hex escapes: \x0d for RETURN, \x03 for RUN/STOP
-    command = "keybuf \"#{processed_keys}\"\n"
+    # C64 keyboard buffer is only 10 bytes - split if needed
+    if petscii_codes.length > 10
+      raise "Command too long: #{petscii_codes.length} bytes (max 10)"
+    end
 
+    # Clear keyboard buffer length first to prevent premature processing
+    command = format(">%04x 00\n", KEYBOARD_BUFFER_LENGTH)
     @socket.write(command)
-    response = read_until_prompt
+    @socket.flush
+    read_until_prompt
 
-    # Check for errors in response
-    raise "Failed to inject keys: #{response}" if response.include?('ERR') || response.include?('?')
+    # Write PETSCII codes directly to keyboard buffer memory
+    petscii_codes.each_with_index do |code, index|
+      addr = KEYBOARD_BUFFER + index
+      command = format(">%04x %02x\n", addr, code)
 
-    response
+      @socket.write(command)
+      @socket.flush
+
+      read_until_prompt
+    end
+
+    # Now set keyboard buffer length to trigger processing
+    command = format(">%04x %02x\n", KEYBOARD_BUFFER_LENGTH, petscii_codes.length)
+    @socket.write(command)
+    @socket.flush
+
+    read_until_prompt
+
+    # Small delay to ensure keyboard buffer is fully set before continuing
+    sleep 0.1
+
+    # Continue execution - breakpoint will trigger after command executes
+    continue_and_wait_for_breakpoint
+
+    # Successfully executed - we're back in monitor at breakpoint
+    true
+  end
+
+  def wait_for_text(text, timeout: 5)
+    raise 'Not connected' unless alive?
+
+    # Ensure C64 is booted
+    boot_c64 unless @c64_booted
+
+    deadline = Time.now + timeout
+
+    while Time.now < deadline
+      # Read full screen to check for text
+      screen_data = read_memory(0x0400, 1000)
+
+      # Convert screen codes to ASCII
+      screen_text = screen_codes_to_ascii(screen_data)
+
+      # Check if text appears anywhere on screen
+      return true if screen_text.include?(text)
+
+      # Wait before polling again
+      sleep 0.5
+    end
+
+    # Timeout - text not found
+    false
   end
 
   def capture_screenshot(filepath, format: :png)
@@ -226,5 +286,94 @@ class VICEAdapter
     end
 
     buffer
+  end
+
+  # Boot the C64 by sending 'g' (go) command
+  # VICE starts paused when -remotemonitor is active
+  # NOTE: If breakpoint is set, this will trigger when C64 reaches READY
+  def boot_c64
+    return if @c64_booted
+
+    @socket.write("g\n")
+    @socket.flush
+
+    # Don't sleep here - let caller wait for breakpoint if needed
+    @c64_booted = true
+  end
+
+  # Set breakpoint at BASIC READY loop
+  # This breakpoint triggers automatically after each BASIC command executes
+  def ensure_breakpoint_set
+    return if @breakpoint_set
+
+    # Boot C64 first if not already booted
+    unless @c64_booted
+      boot_c64
+      # Wait for C64 to fully boot to READY prompt
+      # This is essential - breakpoint must be set after C64 reaches READY
+      # NOTE: C64 takes time to initialize BASIC and reach the READY loop
+      sleep 7
+    end
+
+    # Set breakpoint - if C64 is sitting at $E5D4 (READY loop),
+    # the breakpoint triggers IMMEDIATELY and pauses execution!
+    command = format("break %04x\n", BASIC_READY_LOOP)
+    @socket.write(command)
+    @socket.flush
+
+    # Wait for response - will get BREAK if C64 is at READY, or prompt if not
+    response = read_until_prompt_or_break
+    @breakpoint_set = true
+  end
+
+  # Read until we get either a prompt or a BREAK message
+  def read_until_prompt_or_break
+    require 'timeout'
+
+    buffer = ''
+    Timeout.timeout(10) do  # Increased to 10s for C64 boot time
+      loop do
+        chunk = @socket.readpartial(4096)
+        buffer += chunk
+
+        # Check for prompt or BREAK message
+        # VICE breakpoint messages contain "Stop on  exec" or "BREAK"
+        break if buffer.include?('(C:$') || buffer.include?('BREAK') || buffer.include?('Stop on')
+      rescue IO::WaitReadable
+        IO.select([@socket], nil, nil, 0.1)
+        retry
+      end
+    end
+
+    buffer
+  rescue Timeout::Error
+    buffer
+  end
+
+  # Continue execution with 'g' and wait for breakpoint to hit
+  def continue_and_wait_for_breakpoint
+    @socket.write("g\n")
+    @socket.flush
+
+    # Wait for breakpoint to trigger
+    response = read_until_prompt_or_break
+
+    # Verify we hit the breakpoint
+    # VICE breakpoint messages contain "Stop on  exec" or "BREAK"
+    raise "Breakpoint did not trigger: #{response}" unless response.include?('BREAK') || response.include?('Stop on') || response.include?('(C:$')
+
+    response
+  end
+
+  # Convert ASCII string to PETSCII codes (for keyboard injection)
+  def ascii_to_petscii(text)
+    text.bytes.map do |byte|
+      case byte
+      when 10 then 0x0D  # \n -> RETURN
+      when 65..90 then byte  # A-Z unchanged
+      when 97..122 then byte - 32  # a-z -> A-Z (C64 BASIC is uppercase)
+      else byte  # Everything else unchanged
+      end
+    end
   end
 end

@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { TestConfigParser } from '../core/test-config-parser';
-import { TestOrchestrator } from '../core/test-orchestrator';
+import { TestConfigParser } from '../core/test-config-parser.js';
+import { TestOrchestrator } from '../core/test-orchestrator.js';
 import { existsSync } from 'fs';
 
 export function registerCaptureCommand(program: Command): void {

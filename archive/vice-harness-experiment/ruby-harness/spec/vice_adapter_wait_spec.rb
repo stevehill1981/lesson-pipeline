@@ -2,7 +2,7 @@
 
 require_relative '../lib/vice_adapter'
 
-RSpec.describe 'VICEAdapter#wait_for_text', :skip => 'Needs investigation into VICE screen RAM reading' do
+RSpec.describe 'VICEAdapter#wait_for_text' do
   before(:all) do
     @vice_port = 6513  # Different port to avoid conflict with other tests
     @vice_log = '/tmp/vice_wait_test.log'

@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs';
 import YAML from 'yaml';
 import Ajv from 'ajv';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 export interface TestConfiguration {
   platform: 'c64' | 'spectrum' | 'nes' | 'amiga';
@@ -22,6 +23,7 @@ export interface ProgramConfig {
 export interface ExecutionConfig {
   duration: number;  // seconds
   autoRun?: boolean;
+  keybuf?: string;   // Keyboard input to inject (e.g., "4\n")
 }
 
 export interface CapturesConfig {
@@ -49,6 +51,9 @@ export class TestConfigParser {
   constructor() {
     this.ajv = new Ajv();
     // Schema is in lesson-pipeline/schemas/
+    // In ES modules, use import.meta.url instead of __dirname
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
     this.schemaPath = resolve(__dirname, '../../schemas/test-configuration.schema.json');
   }
 

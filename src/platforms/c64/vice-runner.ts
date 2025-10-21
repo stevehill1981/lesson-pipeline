@@ -1,6 +1,9 @@
-import { spawn, ChildProcess } from 'child_process';
-import { existsSync } from 'fs';
-import { resolve } from 'path';
+import { spawn, ChildProcess, exec } from 'child_process';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { resolve, dirname, basename, extname } from 'path';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export interface ViceOptions {
   display: string;          // X display (e.g., ":99")
@@ -8,6 +11,11 @@ export interface ViceOptions {
   autoRun: boolean;          // Auto-run program after loading
   verbose?: boolean;         // Log VICE output
   workingDir?: string;       // Working directory for VICE
+  exitScreenshot?: string;   // Path to save screenshot on exit
+  exitRecord?: string;       // Path to save video recording on exit
+  limitCycles?: number;      // Automatically exit after N cycles
+  keybuf?: string;           // Keyboard input to inject (e.g., "4\n" for INPUT)
+  keybufDelay?: number;      // Delay before injecting input (default: 0)
 }
 
 export class ViceRunner {
@@ -40,6 +48,34 @@ export class ViceRunner {
   }
 
   /**
+   * Convert .bas text file to .prg using petcat
+   * petcat requires lowercase input for proper tokenization
+   */
+  private async convertBasToPrg(basPath: string): Promise<string> {
+    const prgPath = basPath.replace(/\.bas$/, '.prg');
+
+    // Read BASIC file and convert to lowercase for petcat
+    const content = readFileSync(basPath, 'utf-8');
+    const lowercaseContent = content.toLowerCase();
+
+    // Write to temp file
+    const tempBasPath = basPath.replace(/\.bas$/, '.lowercase.bas');
+    const fs = await import('fs');
+    fs.writeFileSync(tempBasPath, lowercaseContent);
+
+    try {
+      await execAsync(`petcat -w2 -l 0801 -o "${prgPath}" -- "${tempBasPath}"`);
+      // Clean up temp file
+      fs.unlinkSync(tempBasPath);
+      return prgPath;
+    } catch (error: any) {
+      // Clean up temp file on error
+      try { fs.unlinkSync(tempBasPath); } catch {}
+      throw new Error(`Failed to convert BASIC file: ${error.message}`);
+    }
+  }
+
+  /**
    * Start VICE emulator
    */
   async start(): Promise<void> {
@@ -47,28 +83,59 @@ export class ViceRunner {
       throw new Error('VICE is already running');
     }
 
-    return new Promise((resolvePromise, reject) => {
-      const programPath = resolve(this.options.program);
+    return new Promise(async (resolvePromise, reject) => {
+      let programPath = resolve(this.options.program);
+
+      // If it's a .bas file, convert to .prg first (with lowercase conversion)
+      if (extname(programPath) === '.bas') {
+        try {
+          if (this.options.verbose) {
+            console.log(`[ViceRunner] Converting BASIC to PRG (lowercasing for petcat)...`);
+          }
+          programPath = await this.convertBasToPrg(programPath);
+          if (this.options.verbose) {
+            console.log(`[ViceRunner] Created: ${programPath}`);
+          }
+        } catch (error: any) {
+          reject(error);
+          return;
+        }
+      }
 
       // VICE command-line arguments
       const args = [
-        '-autostart', programPath,        // Auto-load program
-        '+sound',                          // Enable sound (required for timing)
-        '-sounddev', 'dummy',              // Dummy sound device (no audio output)
-        '-silent',                         // Suppress informational messages
-        '-VICIIdsize',                     // Double size (better for screenshots)
-        '+confirmexit',                    // Don't ask for confirmation on exit
-        '-refresh', '1'                    // Screen refresh rate
+        '-autostart', programPath,
+        '+sound',
+        '-sounddev', 'dummy',
+        '-VICIIdsize'
       ];
 
-      if (this.options.autoRun) {
-        args.push('-autostart-handle-tde');  // Handle true drive emulation
+      // Add exit options if specified
+      if (this.options.exitScreenshot) {
+        args.push('-exitscreenshot', this.options.exitScreenshot);
       }
 
-      // Set environment
+      if (this.options.exitRecord) {
+        args.push('-exitrecord', this.options.exitRecord);
+      }
+
+      if (this.options.limitCycles) {
+        args.push('-limitcycles', this.options.limitCycles.toString());
+      }
+
+      // Add keyboard buffer injection if specified
+      if (this.options.keybuf) {
+        args.push('-keybuf', this.options.keybuf);
+      }
+
+      if (this.options.keybufDelay) {
+        args.push('-keybuf-delay', this.options.keybufDelay.toString());
+      }
+
+      // Set environment - use default display (not Xvfb)
       const env = {
-        ...process.env,
-        DISPLAY: this.options.display
+        ...process.env
+        // Don't override DISPLAY - let VICE use the actual display
       };
 
       if (this.options.verbose) {

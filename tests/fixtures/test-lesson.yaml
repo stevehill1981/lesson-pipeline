@@ -1,0 +1,41 @@
+title: "Test Lesson - Hello World"
+type: "basic"
+difficulty: "beginner"
+target_platform: "c64"
+requires_capabilities:
+  - load_program
+  - inject_keys
+  - wait_for_text
+
+program:
+  path: "test-prgs/hello.prg"
+
+execution:
+  - action: "load_program"
+    program: "test-prgs/hello.prg"
+    description: "Load hello world program"
+
+  - action: "wait_for"
+    text: "READY"
+    timeout_seconds: 5
+    description: "Wait for READY prompt"
+
+  - action: "inject_keys"
+    keys: "RUN\n"
+    description: "Type RUN and press RETURN"
+
+  - action: "wait_for"
+    text: "HELLO"
+    timeout_seconds: 3
+    description: "Wait for program output"
+
+verification:
+  - type: "text_output"
+    expected:
+      - "HELLO"
+    location: "screen"
+
+tags:
+  - "test"
+  - "basic"
+  - "hello-world"

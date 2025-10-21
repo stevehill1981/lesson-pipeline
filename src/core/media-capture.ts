@@ -35,7 +35,23 @@ export class MediaCapture {
     }
 
     try {
-      await execAsync(`DISPLAY=${display} import -window root ${outputPath}`);
+      // On macOS, use simple screencapture
+      if (process.platform === 'darwin') {
+        await execAsync(
+          `screencapture -x "${outputPath}"`
+        );
+      } else {
+        // On Linux, use xwd with the actual display
+        const xwdPath = `${this.config.outputDir}/${name}.xwd`;
+        await execAsync(
+          `xwd -root -out "${xwdPath}" 2>/dev/null`
+        );
+        await execAsync(
+          `convert "${xwdPath}" "${outputPath}" 2>/dev/null`
+        );
+        await execAsync(`rm -f "${xwdPath}"`);
+      }
+
       return outputPath;
     } catch (error: any) {
       throw new Error(`Screenshot capture failed: ${error.message}`);
@@ -51,9 +67,17 @@ export class MediaCapture {
     }
 
     try {
-      await execAsync(
-        `DISPLAY=${display} ffmpeg -f x11grab -video_size 800x600 -i ${display} -t ${duration} -vcodec libx264 ${outputPath}`
-      );
+      // On macOS, use ffmpeg with avfoundation to capture screen
+      if (process.platform === 'darwin') {
+        await execAsync(
+          `ffmpeg -f avfoundation -i "1:none" -t ${duration} -vcodec libx264 -preset ultrafast "${outputPath}" 2>/dev/null`
+        );
+      } else {
+        // On Linux, use x11grab
+        await execAsync(
+          `ffmpeg -f x11grab -video_size 800x600 -i ${display} -t ${duration} -vcodec libx264 "${outputPath}"`
+        );
+      }
       return outputPath;
     } catch (error: any) {
       throw new Error(`Video capture failed: ${error.message}`);

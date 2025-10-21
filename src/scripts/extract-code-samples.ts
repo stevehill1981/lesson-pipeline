@@ -22,10 +22,19 @@ function extractCodeBlocks(content: string): CodeBlock[] {
   let index = 1;
 
   while ((match = regex.exec(content)) !== null) {
-    blocks.push({
-      content: match[1].trim(),
-      index: index++
-    });
+    let code = match[1].trim();
+
+    // Remove NEW command if present (not needed in .bas files)
+    code = code.replace(/^NEW\n/i, '');
+    code = code.replace(/^NEW$/im, '');
+
+    // Skip blocks that are just comments or non-executable
+    if (code && !code.match(/^REM/i)) {
+      blocks.push({
+        content: code,
+        index: index++
+      });
+    }
   }
 
   return blocks;
@@ -36,17 +45,23 @@ function extractLessonNumber(filePath: string): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-function extractWeekNumber(filePath: string): number | null {
-  const match = filePath.match(/week-(\d+)/);
+function extractTierNumber(filePath: string): number | null {
+  const match = filePath.match(/tier-(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
+}
+
+function extractPhaseNumber(filePath: string): number | null {
+  const match = filePath.match(/phase-(\d+)/);
   return match ? parseInt(match[1], 10) : null;
 }
 
 function processLesson(lessonPath: string, outputBaseDir: string): void {
   const lessonNumber = extractLessonNumber(lessonPath);
-  const weekNumber = extractWeekNumber(lessonPath);
+  const tierNumber = extractTierNumber(lessonPath);
+  const phaseNumber = extractPhaseNumber(lessonPath);
 
-  if (!lessonNumber || !weekNumber) {
-    console.warn(`⚠️  Could not extract lesson/week number from ${lessonPath}`);
+  if (!lessonNumber || !tierNumber || phaseNumber === null) {
+    console.warn(`⚠️  Could not extract lesson/tier/phase number from ${lessonPath}`);
     return;
   }
 
@@ -61,11 +76,12 @@ function processLesson(lessonPath: string, outputBaseDir: string): void {
     return;
   }
 
-  // Create output directory
+  // Create output directory: phase-N/tier-N/lesson-NNN
   const outputDir = path.join(
     outputBaseDir,
-    `week-${weekNumber}`,
-    `lesson-${String(lessonNumber).padStart(2, '0')}`
+    `phase-${phaseNumber}`,
+    `tier-${tierNumber}`,
+    `lesson-${String(lessonNumber).padStart(3, '0')}`
   );
 
   // Remove existing directory if it exists
@@ -93,32 +109,30 @@ function main() {
 
   if (args.length < 1) {
     console.error('Usage: node dist/scripts/extract-code-samples.js <output-dir>');
-    console.error('Example: node dist/scripts/extract-code-samples.js /Users/stevehill/Projects/Code198x/code-samples/commodore-64/basic');
+    console.error('Example: node dist/scripts/extract-code-samples.js /Users/stevehill/Projects/Code198x/code-samples/commodore-64');
     process.exit(1);
   }
 
   const outputDir = args[0];
 
-  // Find all lesson MDX files
+  // Find all lesson MDX files in phase-0/tier-* directories
   const lessonFiles: string[] = [];
+  const baseDir = '/Users/stevehill/Projects/Code198x/website/src/pages/commodore-64/phase-0';
 
-  for (let week = 1; week <= 8; week++) {
-    const weekDir = path.join(
-      '/Users/stevehill/Projects/Code198x/website/src/pages/commodore-64/basic',
-      `week-${week}`
-    );
+  for (let tier = 1; tier <= 4; tier++) {
+    const tierDir = path.join(baseDir, `tier-${tier}`);
 
-    if (!fs.existsSync(weekDir)) {
-      console.warn(`⚠️  Week ${week} directory not found: ${weekDir}`);
+    if (!fs.existsSync(tierDir)) {
+      console.warn(`⚠️  Tier ${tier} directory not found: ${tierDir}`);
       continue;
     }
 
-    const files = fs.readdirSync(weekDir);
+    const files = fs.readdirSync(tierDir);
     const lessonPattern = /^lesson-\d+\.mdx$/;
 
     files
       .filter(f => lessonPattern.test(f))
-      .forEach(f => lessonFiles.push(path.join(weekDir, f)));
+      .forEach(f => lessonFiles.push(path.join(tierDir, f)));
   }
 
   console.log(`\n📚 Found ${lessonFiles.length} lesson files\n`);

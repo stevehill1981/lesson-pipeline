@@ -9,16 +9,22 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "node --test",
+    "test": "npm run build && node --import tsx --test tests/harness/*.test.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts"
   },
-  "keywords": ["retro", "c64", "education", "testing"],
+  "keywords": [
+    "retro",
+    "c64",
+    "education",
+    "testing"
+  ],
   "author": "Steve Hill",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",
     "eslint": "^8.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.0.0"
   },
   "dependencies": {

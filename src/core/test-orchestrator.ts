@@ -1,6 +1,6 @@
-import { TestConfiguration, TestConfigParser } from './test-config-parser';
-import { ViceRunner } from '../platforms/c64/vice-runner';
-import { MediaCapture } from './media-capture';
+import { TestConfiguration, TestConfigParser } from './test-config-parser.js';
+import { ViceRunner } from '../platforms/c64/vice-runner.js';
+import { MediaCapture } from './media-capture.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { mkdirSync, existsSync } from 'fs';
@@ -58,11 +58,9 @@ export class TestOrchestrator {
       errors: []
     };
 
-    let viceRunner: ViceRunner | undefined;
-
     try {
-      // Step 1: Start Xvfb if needed
-      await this.ensureXvfb();
+      // Step 1: Xvfb not needed - using actual display
+      // await this.ensureXvfb();
 
       // Step 2: Create output directory
       const outputDir = this.parser.getOutputDir(
@@ -88,72 +86,54 @@ export class TestOrchestrator {
         quality: 90
       });
 
-      // Step 4: Start VICE
-      if (this.options.verbose) {
-        console.log('🚀 Starting VICE...');
-      }
+      // Step 4: Capture screenshots using VICE's -exitscreenshot + -limitcycles
+      // C64 runs at ~1 MHz (1,000,000 cycles/second)
+      const CYCLES_PER_SECOND = 1000000;
 
-      viceRunner = new ViceRunner({
-        display: this.options.display!,
-        program: this.config.program.file,
-        autoRun: this.config.execution.autoRun ?? true,
-        verbose: this.options.verbose
-      });
-
-      await viceRunner.start();
-      await viceRunner.waitForStartup();
-
-      if (this.options.verbose) {
-        console.log('✅ VICE running\n');
-      }
-
-      // Step 5: Start video recording if enabled
-      let videoPromise: Promise<string> | undefined;
-
-      if (
-        !this.options.skipVideo &&
-        this.config.captures?.video?.enabled
-      ) {
-        const videoDuration = this.config.captures.video.duration || this.config.execution.duration;
-
-        if (this.options.verbose) {
-          console.log(`🎥 Recording video (${videoDuration}s)...`);
-        }
-
-        videoPromise = mediaCapture.captureVideo(
-          'execution',
-          videoDuration,
-          this.options.display
-        );
-      }
-
-      // Step 6: Capture screenshots at specified times
       if (
         !this.options.skipScreenshots &&
         this.config.captures?.screenshots
       ) {
         for (const screenshot of this.config.captures.screenshots) {
-          // Wait until the specified time
-          await this.sleep(screenshot.time * 1000);
-
           if (this.options.verbose) {
-            console.log(`📸 Capturing screenshot: ${screenshot.name} (at ${screenshot.time}s)`);
+            console.log(`\n📸 Capturing screenshot: ${screenshot.name} (at ${screenshot.time}s)`);
           }
 
           try {
-            const path = await mediaCapture.captureScreenshot(
-              screenshot.name,
-              this.options.display
-            );
+            const screenshotPath = `${outputDir}/${screenshot.name}.png`;
 
-            result.screenshots.push({
-              name: screenshot.name,
-              path,
-              time: screenshot.time
+            // Calculate cycles needed (with 10s buffer for startup/loading)
+            const cycles = (screenshot.time + 10) * CYCLES_PER_SECOND;
+
+            // Create ViceRunner with exitscreenshot and limitcycles
+            const viceInstance = new ViceRunner({
+              display: this.options.display!,
+              program: this.config.program.file,
+              autoRun: this.config.execution.autoRun ?? true,
+              verbose: this.options.verbose,
+              exitScreenshot: screenshotPath,
+              limitCycles: cycles,
+              keybuf: this.config.execution.keybuf  // Inject keyboard input if specified
             });
 
-            if (this.options.verbose) {
-              console.log(`   ✓ Saved: ${path}`);
+            await viceInstance.start();
+
+            // Wait for VICE to exit automatically (add buffer for startup/shutdown)
+            await this.sleep((screenshot.time + 10) * 1000);
+
+            // Verify screenshot was created
+            if (existsSync(screenshotPath)) {
+              result.screenshots.push({
+                name: screenshot.name,
+                path: screenshotPath,
+                time: screenshot.time
+              });
+
+              if (this.options.verbose) {
+                console.log(`   ✓ Saved: ${screenshotPath}`);
+              }
+            } else {
+              throw new Error('Screenshot file not created');
             }
           } catch (error: any) {
             const errorMsg = `Failed to capture screenshot ${screenshot.name}: ${error.message}`;
@@ -163,39 +143,6 @@ export class TestOrchestrator {
             }
           }
         }
-      }
-
-      // Step 7: Wait for video recording to complete
-      if (videoPromise) {
-        try {
-          const videoPath = await videoPromise;
-          result.video = {
-            path: videoPath,
-            duration: this.config.captures!.video!.duration || this.config.execution.duration
-          };
-
-          if (this.options.verbose) {
-            console.log(`\n✅ Video saved: ${videoPath}`);
-          }
-        } catch (error: any) {
-          const errorMsg = `Failed to capture video: ${error.message}`;
-          result.errors?.push(errorMsg);
-          if (this.options.verbose) {
-            console.error(`✗ ${errorMsg}`);
-          }
-        }
-      }
-
-      // Step 8: Wait for remaining execution time
-      const totalScreenshotTime = this.config.captures?.screenshots
-        ?.reduce((max, s) => Math.max(max, s.time), 0) || 0;
-      const remainingTime = Math.max(
-        0,
-        this.config.execution.duration - totalScreenshotTime
-      );
-
-      if (remainingTime > 0) {
-        await this.sleep(remainingTime * 1000);
       }
 
       result.success = true;
@@ -208,13 +155,7 @@ export class TestOrchestrator {
         console.error(`\n❌ Error: ${error.message}`);
       }
     } finally {
-      // Step 9: Cleanup
-      if (viceRunner) {
-        if (this.options.verbose) {
-          console.log('\n🛑 Shutting down VICE...');
-        }
-        await viceRunner.shutdown();
-      }
+      // Cleanup: VICE instances exit automatically via -limitcycles
     }
 
     return result;
